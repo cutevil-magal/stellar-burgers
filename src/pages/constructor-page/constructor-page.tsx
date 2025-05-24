@@ -1,4 +1,4 @@
-import { useSelector } from '../../services/store';
+// import { useSelector } from '../../services/store';
 
 import styles from './constructor-page.module.css';
 
@@ -7,9 +7,23 @@ import { BurgerConstructor } from '../../components';
 import { Preloader } from '../../components/ui';
 import { FC } from 'react';
 
+import { useDispatch, useSelector } from '../../services/store'; // Используем наши типизированные хуки
+import { fetchIngredients } from '../../services/slices/ingredientsSlice';
+import { useEffect } from 'react';
+import { selectIngredient } from '../../services/slices/ingredientSlice';
+
 export const ConstructorPage: FC = () => {
   /** TODO: взять переменную из стора */
-  const isIngredientsLoading = false;
+  // const isIngredientsLoading = false;
+
+  const dispatch = useDispatch();
+  const isIngredientsLoading = useSelector(
+    (state) => state.ingredients.isLoading
+  );
+
+  useEffect(() => {
+    dispatch(fetchIngredients()); // Теперь ошибки не будет
+  }, [dispatch]);
 
   return (
     <>
