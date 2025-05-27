@@ -2,7 +2,7 @@ import { FC, SyntheticEvent, useState, useEffect } from 'react';
 import { LoginUI } from '@ui-pages';
 import { useDispatch, useSelector } from '../../services/store';
 import { loginUser } from '../../services/slices/loginSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getUser } from '../../services/slices/userSlice';
 
 export const Login: FC = () => {
@@ -11,6 +11,7 @@ export const Login: FC = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { user, error } = useSelector((state) => state.login);
   const errorText = error || '';
@@ -18,12 +19,21 @@ export const Login: FC = () => {
     e.preventDefault();
     dispatch(loginUser({ email, password }));
   };
+  // useEffect(() => {
+  //   if (user) {
+  //     // dispatch(getUser());
+  //     navigate('/'); // на главную страницу
+  //     // navigate(location.state?.from || '/profile', { replace: true });
+  //   }
+  // }, [user, navigate, location]);
+  const isLoading = useSelector((state) => state.user.isLoading);
   useEffect(() => {
-    if (user) {
+    if (!isLoading && user) {
       dispatch(getUser());
-      navigate('/'); // на главную страницу
+      const redirectPath = location.state?.from || '/';
+      navigate(redirectPath, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isLoading, navigate, location.state?.from]);
 
   return (
     <LoginUI

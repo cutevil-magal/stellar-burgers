@@ -10,7 +10,7 @@ type TServerResponse<T> = {
   success: boolean;
 } & T;
 
-type TRefreshResponse = TServerResponse<{
+export type TRefreshResponse = TServerResponse<{
   refreshToken: string;
   accessToken: string;
 }>;

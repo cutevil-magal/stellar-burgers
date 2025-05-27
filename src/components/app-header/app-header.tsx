@@ -4,5 +4,7 @@ import { useSelector } from '../../services/store';
 
 export const AppHeader: FC = () => {
   const user = useSelector((state) => state.user.user);
-  return <AppHeaderUI userName={user?.name || ''} />;
+  const isLoading = useSelector((state) => state.user.isLoading);
+  // return <AppHeaderUI userName={user?.name || ''} />;
+  return <AppHeaderUI userName={isLoading ? 'Загрузка...' : user?.name} />;
 };

@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { TIngredient } from '@utils-types';
+import { sendOrder } from './orderSlice';
 
 type BurgerConstructorState = {
   bun: TIngredient | null;
@@ -45,6 +46,17 @@ const burgerConstructorSlice = createSlice({
     updateIngredients(state, action: PayloadAction<TIngredient[]>) {
       state.ingredients = action.payload; // Обновляем порядок ингредиентов
     }
+  },
+  //очистка конструктора при получении ответа от сервера
+  extraReducers: (builder) => {
+    builder.addCase(sendOrder.fulfilled, (state, action) => {
+      // Проверяем, что ответ содержит данные заказа
+      if (action.payload) {
+        state.bun = null;
+        state.ingredients = [];
+        state.ingredientCount = {};
+      }
+    });
   }
 });
 

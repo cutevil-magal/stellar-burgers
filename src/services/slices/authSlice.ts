@@ -29,6 +29,10 @@ export const registerUser = createAsyncThunk<
 >('auth/register', async (data, { rejectWithValue }) => {
   try {
     const response = await registerUserApi(data);
+    document.cookie = `accessToken=${response.accessToken}; path=/; secure; samesite=Lax`;
+    document.cookie = `refreshToken=${response.refreshToken}; path=/; secure; samesite=Lax`;
+    localStorage.setItem('accessToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
     return response;
   } catch (error: any) {
     return rejectWithValue(error.message || 'Ошибка сервера');
@@ -58,8 +62,6 @@ const authSlice = createSlice({
           state.user = action.payload.user;
           state.accessToken = action.payload.accessToken;
           state.refreshToken = action.payload.refreshToken;
-          document.cookie = `accessToken=${action.payload.accessToken}; path=/; secure; samesite=Lax`;
-          document.cookie = `refreshToken=${action.payload.refreshToken}; path=/; secure; samesite=Lax`;
         }
       )
       .addCase(registerUser.rejected, (state, action) => {

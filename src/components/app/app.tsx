@@ -11,23 +11,19 @@ import {
   ProfileOrders,
   NotFound404
 } from '@pages';
-import {
-  Route,
-  Routes,
-  BrowserRouter,
-  useLocation,
-  matchPath
-} from 'react-router-dom';
+import { Route, Routes, BrowserRouter, useLocation } from 'react-router-dom';
 
 import { AppHeader } from '@components';
 import { Provider } from 'react-redux';
 import { ProtectedRoute } from '../protected-route';
-import store from '../../services/store';
+import store, { useDispatch } from '../../services/store';
 
 import { Modal } from '../modal';
 import { OrderInfo } from '../order-info';
 import { IngredientDetails } from '../ingredient-details';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { getUser, refreshAuthToken } from '../../services/slices/userSlice';
 
 function App() {
   return (
@@ -43,6 +39,25 @@ const AppContent = () => {
   const location = useLocation();
   const backgroundLocation = location.state?.background || location;
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const number = useLocation().pathname.split('/').pop();
+
+  const tokenRefreshed = useRef(false);
+  useEffect(() => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken && !tokenRefreshed.current) {
+      tokenRefreshed.current = true;
+      dispatch(refreshAuthToken())
+        .unwrap()
+        .then(() => {
+          dispatch(getUser());
+        })
+        .catch(() => {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+        });
+    }
+  }, [dispatch]);
 
   return (
     <div className={styles.app}>
@@ -102,6 +117,35 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path='/ingredients/:id'
+          element={
+            <div className={styles.detailPageWrap}>
+              <h1 className={styles.detailHeader}>Детали ингредиента</h1>
+              <IngredientDetails />
+            </div>
+          }
+        />
+        <Route
+          path='/feed/:number'
+          element={
+            <div className={styles.detailPageWrap}>
+              <h1 className={styles.detailHeader}>{`#${number}`}</h1>
+              <OrderInfo />
+            </div>
+          }
+        />
+        <Route
+          path='/profile/orders/:number'
+          element={
+            <div className={styles.detailPageWrap}>
+              <h1 className={styles.detailHeader}>{`#${number}`}</h1>
+              <ProtectedRoute>
+                <OrderInfo />
+              </ProtectedRoute>
+            </div>
+          }
+        />
         <Route path='*' element={<NotFound404 />} />
       </Routes>
       {/* Модальные окна */}
@@ -122,7 +166,8 @@ const AppContent = () => {
             path='/feed/:number'
             element={
               <Modal
-                title='Информация о заказе'
+                // title='Информация о заказе'
+                title={`#${number}`}
                 onClose={() => navigate(backgroundLocation.pathname)}
               >
                 <OrderInfo />
@@ -134,7 +179,8 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <Modal
-                  title='Детали заказа'
+                  // title='Детали заказа'
+                  title={`#${number}`}
                   onClose={() => navigate(backgroundLocation.pathname)}
                 >
                   <OrderInfo />
