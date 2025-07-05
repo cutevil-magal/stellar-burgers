@@ -1,11 +1,29 @@
 /// <reference types="cypress" />
 
+// Из-за основного файла tsconfig.json и "types": ["node", "jest"], применить команды cypress не получилось, 
+// поэтому использую константы
+
+// Селекторы конструктора
+const CONSTRUCTOR = {
+  BUN_TOP: '[data-cy="constructor-bun-top"]',
+  INGREDIENTS_LIST: '[data-cy="constructor-ingredients-list"]',
+  INGREDIENT: '[data-cy="constructor-ingredient"]',
+  SUBMIT_BUTTON: '[data-cy="submit-order-button"]'
+};
+
+// Селекторы модальных окон
+const MODAL = {
+  INGREDIENT: '[data-cy="ingredient-modal"]',
+  ORDER: '[data-cy="order-modal"]',
+  CLOSE_BUTTON: '[data-cy="modal-close-button"]',
+};
+
 describe('Конструктор бургера', () => {
   beforeEach(() => {
     // Загружаем моковые данные из fixtures
     cy.fixture('ingredients.json').then((ingredients) => {
       // Мокаем ответ API
-      cy.intercept('GET', 'https://norma.nomoreparties.space/api/ingredients', {
+      cy.intercept('GET', 'api/ingredients', {
         statusCode: 200,
         body: { success: true, data: ingredients }
       }).as('getIngredients');
@@ -29,9 +47,9 @@ describe('Конструктор бургера', () => {
       .parent() // предполагаем, что название внутри обёртки с кнопкой
       .find('button') // или конкретный селектор: .add-button
       .click();
-
+    
     // Проверяем, что булка появилась сверху
-    cy.get('[data-cy="constructor-bun-top"]')
+    cy.get(CONSTRUCTOR.BUN_TOP)
       .should('contain.text', 'Краторная булка N-200i');
   });
 
@@ -41,7 +59,7 @@ describe('Конструктор бургера', () => {
       .find('button')
       .click();
 
-    cy.get('[data-cy="constructor-ingredients-list"]')
+    cy.get(CONSTRUCTOR.INGREDIENTS_LIST)
       .should('contain.text', 'Биокотлета из марсианской Магнолии');
   });
 
@@ -51,7 +69,7 @@ describe('Конструктор бургера', () => {
       .find('button')
       .click();
 
-    cy.get('[data-cy="constructor-ingredients-list"]')
+    cy.get(CONSTRUCTOR.INGREDIENTS_LIST)
       .should('contain.text', 'Соус с шипами Антарианского плоскоходца');
   });
 
@@ -60,7 +78,7 @@ describe('Конструктор бургера', () => {
 describe('Модальные окна ингредиента', () => {
   beforeEach(() => {
     cy.fixture('ingredients.json').then((ingredients) => {
-      cy.intercept('GET', 'https://norma.nomoreparties.space/api/ingredients', {
+      cy.intercept('GET', 'api/ingredients', {
         statusCode: 200,
         body: { success: true, data: ingredients }
       }).as('getIngredients');
@@ -73,24 +91,24 @@ describe('Модальные окна ингредиента', () => {
   it('должен открывать модальное окно ингредиента по клику', () => {
     cy.contains('Биокотлета из марсианской Магнолии').click();
 
-    cy.get('[data-cy="ingredient-modal"]').should('be.visible');
+    cy.get(MODAL.INGREDIENT).should('be.visible');
     cy.get('[data-cy="ingredient-title"]').should('contain.text', 'Биокотлета из марсианской Магнолии');
   });
 
   it('должен закрывать модальное окно ингредиента по клику на крестик', () => {
     cy.contains('Биокотлета из марсианской Магнолии').click();
 
-    cy.get('[data-cy="ingredient-modal"]').should('be.visible');
-    cy.get('[data-cy="modal-close-button"]').click();
-    cy.get('[data-cy="ingredient-modal"]').should('not.exist');
+    cy.get(MODAL.INGREDIENT).should('be.visible');
+    cy.get(MODAL.CLOSE_BUTTON).click();
+    cy.get(MODAL.INGREDIENT).should('not.exist');
   });
 
   it('должен закрывать модальное окно ингредиента по клику на оверлей', () => {
     cy.contains('Биокотлета из марсианской Магнолии').click();
 
-    cy.get('[data-cy="ingredient-modal"]').should('be.visible');
+    cy.get(MODAL.INGREDIENT).should('be.visible');
     cy.get('[data-cy="modal-overlay"]').click('topLeft', { force: true });
-    cy.get('[data-cy="ingredient-modal"]').should('not.exist');
+    cy.get(MODAL.INGREDIENT).should('not.exist');
   });
 });
 
@@ -98,7 +116,7 @@ describe('Создание заказа на странице конструкт
  beforeEach(() => {
     // Моки данных
     cy.fixture('ingredients.json').then((ingredients) => {
-      cy.intercept('GET', '**/api/ingredients', {
+      cy.intercept('GET', 'api/ingredients', {
         statusCode: 200,
         body: { success: true, data: ingredients }
       }).as('getIngredients');
@@ -106,19 +124,19 @@ describe('Создание заказа на странице конструкт
 
     // Моки авторизации
     cy.fixture('user.json').then((userData) => {
-      cy.intercept('POST', '**/api/auth/token', {
+      cy.intercept('POST', 'api/auth/token', {
         statusCode: 200,
         body: { success: true, accessToken: 'mock-token' }
       }).as('refreshToken');
       
-      cy.intercept('GET', '**/api/auth/user', {
+      cy.intercept('GET', 'api/auth/user', {
         statusCode: 200,
         body: userData
       }).as('getUser');
     });
 
     cy.fixture('order.json').then((orderData) => {
-      cy.intercept('POST', '**/api/orders', {
+      cy.intercept('POST', 'api/orders', {
         statusCode: 200,
         body: orderData
       }).as('createOrder');
@@ -157,8 +175,8 @@ describe('Создание заказа на странице конструкт
       .click();
 
     // Проверяем что добавлено
-    cy.get('[data-cy="constructor-bun-top"]').should('exist');
-    cy.get('[data-cy="constructor-ingredient"]').should('exist');
+    cy.get(CONSTRUCTOR.BUN_TOP).should('exist');
+    cy.get(CONSTRUCTOR.INGREDIENT).should('exist');
   });
 
   it('должен отображать модальное окно с номером заказа', () => {
@@ -167,11 +185,11 @@ describe('Создание заказа на странице конструкт
     cy.contains('Биокотлета из марсианской Магнолии').parent().find('button').click();
 
     // Оформляем заказ и ждем ответа
-    cy.get('[data-cy="submit-order-button"]').click();
+    cy.get(CONSTRUCTOR.SUBMIT_BUTTON).click();
     cy.wait('@createOrder');
     
     // Проверяем модальное окно
-    cy.get('[data-cy="order-modal"]').should('be.visible');
+    cy.get(MODAL.ORDER).should('be.visible');
     cy.get('[data-cy="order-number"]').should('contain', '123456');
   });
 
@@ -179,24 +197,24 @@ describe('Создание заказа на странице конструкт
     // Предварительные шаги
     cy.contains('Краторная булка N-200i').parent().find('button').click();
     cy.contains('Биокотлета из марсианской Магнолии').parent().find('button').click();
-    cy.get('[data-cy="submit-order-button"]').click();
+    cy.get(CONSTRUCTOR.SUBMIT_BUTTON).click();
     cy.wait('@createOrder');
     
     // Закрываем модальное окно
-    cy.get('[data-cy="modal-close-button"]').click();
-    cy.get('[data-cy="order-modal"]').should('not.exist');
+    cy.get(MODAL.CLOSE_BUTTON).click();
+    cy.get(MODAL.ORDER).should('not.exist');
   });
 
   it('должен очищать конструктор после создания заказа', () => {
     // Предварительные шаги
     cy.contains('Краторная булка N-200i').parent().find('button').click();
     cy.contains('Биокотлета из марсианской Магнолии').parent().find('button').click();
-    cy.get('[data-cy="submit-order-button"]').click();
+    cy.get(CONSTRUCTOR.SUBMIT_BUTTON).click();
     cy.wait('@createOrder');
-    cy.get('[data-cy="modal-close-button"]').click();
+    cy.get(MODAL.CLOSE_BUTTON).click();
     
     // Проверяем очистку конструктора
     cy.get('[data-cy="no-bun-placeholder"]').should('exist');
-    cy.get('[data-cy="constructor-ingredient"]').should('not.exist');
+    cy.get(CONSTRUCTOR.INGREDIENT).should('not.exist');
   });
 });
